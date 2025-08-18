@@ -1,1 +1,17 @@
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-apps
+spec:
+  replicas: 8
+  selector:
+   matchlabels:
+     app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: httpd-demo
+        image: httpd
