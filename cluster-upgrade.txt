@@ -1,0 +1,72 @@
+
+ Add Kubernetes Package Repository
+=============================================
+
+Download the public signing key for the Kubernetes package repository using curl command.
+
+# curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/k8s.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/k8s.31.gpg
+
+# echo 'deb [signed-by=/etc/apt/keyrings/k8s.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/k8s.list
+# echo 'deb [signed-by=/etc/apt/keyrings/k8s.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/k8s.31.list
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/k8s.33.gpg
+# echo 'deb [signed-by=/etc/apt/keyrings/k8s.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/k8s.33.list
+
+$ apt update
+$ apt-cache madison kubeadm
+
+
+
+upgrade
+=========
+	
+ssh master
+sudo -i
+kubecrl get no
+kubectl drain master --ignore-daemonsets
+	
+apt-get install -y kubeadm 	kubelet kubectl
+apt-get install -y kubeadm='1.31.1-*' kubelet='1.31.1-*' kubectl='1.31.1-*'
+kubeadm upgrade plan
+kubeadm upgrade apply v1.21.1
+
+systemctl daemon-reload
+systemctl restart kubelet
+kubectl uncordon master
+kubectl get node
+
+
+
+
+workernode-01
+=============
+kubectl drain k8s-worker01.glotechcorp.com --ignore-daemonsets
+	
+apt-get install -y kubeadm 	kubelet kubectl
+apt-get install -y kubeadm='1.31.1-*' kubelet='1.31.1-*' kubectl='1.31.1-*'
+kubeadm upgrade node
+
+
+systemctl daemon-reload
+systemctl restart kubelet
+kubectl uncordon k8s-worker01.glotechcorp.com
+kubectl get node
+
+
+workernode-02
+=============
+
+kubectl drain k8s-worker02.glotechcorp.com --ignore-daemonsets
+	
+apt-get install -y kubeadm 	kubelet kubectl
+apt-get install -y kubeadm='1.31.1-*' kubelet='1.31.1-*' kubectl='1.31.1-*'
+kubeadm upgrade node
+
+
+systemctl daemon-reload
+systemctl restart kubelet
+kubectl uncordon k8s-worker02.glotechcorp.com
+kubectl get node
+
+
