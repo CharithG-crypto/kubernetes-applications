@@ -1,0 +1,211 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-replica
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-container
+        image: nginx 
+
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-pod
+spec:
+  replicas: 3
+  selector: 
+    matchLabels: 
+      app: production
+  template:
+    metadata:
+      labels:
+        app: production
+    spec:
+      containers: 
+      - name: nginx-container
+        image: nginx:1.14.2
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-apps
+spec:
+  replicas: 5
+  selector:
+   matchlabels:
+     app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      nodeName: node1
+      containers:
+      - name: nginx
+        image: nginx
+       
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-configmap-demo
+spec:
+  - name: demo-box
+    image: busybox
+  - configMapRef:
+     name: app-config
+
+      
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-pod
+  namespace: nginx-app
+spec:
+  replicas: 3
+  selector: 
+    matchLabels: 
+      app: production
+  template:
+    metadata:
+      labels:
+        app: production
+    spec:
+      containers: 
+      - name: nginx-container
+        image: nginx
+
+
+#wordpress
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: mysql:8.0
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: MYSQL_DATABASE
+          value: word-press
+        - name: MYSQL_USER
+          value: charith
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-storage
+        hostPath: 
+
+
+
+
+
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+  labels:
+    type: local
+    app: webserver
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      app: webserver
+      type: local
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: wordpress:6.2.1-apache
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-pass
+        - name: WORDPRESS_DB_USER
+          value: charith
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: wordpress-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-storage
+        persistentVolumeClaim:
+          claimName: wp-pv-claim
+
