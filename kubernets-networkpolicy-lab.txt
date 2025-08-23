@@ -118,3 +118,6 @@ Now test again from the frontend namespace. It should succeed.
 6.Clean Up
 ===================================
 kubectl delete ns frontend backend
+
+
+kubectl delete the frontend and backend running pods
