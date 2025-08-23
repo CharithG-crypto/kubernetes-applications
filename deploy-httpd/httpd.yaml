@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-apps
+  namespace: frontend
+spec:
+  replicas: 8
+  selector:
+   matchLabels:
+     app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: httpd-demo
+        image: httpd
