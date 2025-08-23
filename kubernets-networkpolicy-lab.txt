@@ -1,0 +1,120 @@
+1. Create namespaces
+===================================
+
+kubectl create namespace frontend
+kubectl create namespace backend
+
+2. Deploy pods in each namespace
+===================================
+Frontend Pod:
+-----------------
+
+# frontend-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  namespace: frontend
+  labels:
+    app: frontend
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+	
+	
+Backend Pod:
+------------
+
+# backend-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend
+  namespace: backend
+  labels:
+    app: backend
+spec:
+  containers:
+  - name: httpd
+    image: httpd
+	
+	
+Apply the manifests:
+-----------------------
+
+kubectl apply -f frontend-pod.yaml
+kubectl apply -f backend-pod.yaml
+
+3. Test connectivity before policy
+===================================
+Use a test pod in frontend to test access:
+
+kubectl run test --rm -it --restart=Never --image=busybox -n frontend -- sh
+# Inside the pod:
+wget --spider http://backend.backend.svc.cluster.local
+
+You should see that it can connect.
+
+4. Apply NetworkPolicy to Deny All Incoming Traffic
+======================================================================
+# deny-all.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  
+  
+Apply it:
+---------
+
+kubectl apply -f deny-all.yaml
+
+Now run the same connectivity test again. The connection should fail.
+
+
+kubectl run test --rm -it --restart=Never --image=busybox -n frontend -- sh
+# Inside the pod:
+wget --spider http://backend.backend.svc.cluster.local
+
+
+5. Allow Only Frontend Namespace to Access Backend
+=======================================================================
+# allow-frontend.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: frontend
+  policyTypes:
+  - Ingress
+  
+But first, label the namespace:
+
+
+kubectl label namespace frontend name=frontend
+
+Apply the policy:
+-------------------
+
+kubectl apply -f allow-frontend.yaml
+
+Now test again from the frontend namespace. It should succeed.
+
+6.Clean Up
+===================================
+kubectl delete ns frontend backend
